@@ -54,6 +54,9 @@ led_b.value(1)
 dir_sd = "/sd"
 dirname_picture = "pictures"
 
+print("listdir of /: ", uos.listdir("/"))
+print("listdir of /sd: ", uos.listdir("/sd"))
+
 uos.chdir(dir_sd)
 dirname_list = uos.listdir()
 if dirname_picture not in dirname_list:
@@ -72,7 +75,12 @@ thresh_long_press_a = 4
 
 def get_picture_filename_list():
     uos.chdir(dir_picture)
-    return uos.listdir()
+    listfir = uos.listdir()
+
+    # "."で始まるものは削除する
+    listfir = [s for s in listfir if s[0] != '.']
+
+    return listfir
 
 
 def get_latest_image_filename():
@@ -207,7 +215,11 @@ def get_save_path():
 
 
 def save_image():
+    print("listdir of /: ", uos.listdir("/"))
+    print("listdir of /sd: ", uos.listdir("/sd"))
+
     path = get_save_path()
+    print('path: ', path)
 
     # 下で写真ファイル名の右側に空白表示するので左右のバランスをとるために左側にも表示する
     lcd.draw_string(55, 115, '     ', lcd.WHITE, lcd.BLACK)
@@ -219,11 +231,32 @@ def save_image():
 
     print("saving path:", path)
     try:
+        print("listdir of /: ", uos.listdir("/"))
+        print("listdir of /sd: ", uos.listdir("/sd"))
         img.save(path)
     except Exception as e:
         print(e)
         lcd.draw_string(lcd.width()//2-100, lcd.height()//2-4,
                         "Error: save_image", lcd.WHITE, lcd.RED)
+        time.sleep(1)
+
+        # # 仮）すべての写真を削除する
+        # print("listdir of /: ", uos.listdir("/"))
+        # print("listdir of /sd: ", uos.listdir("/sd"))
+        # filename_list = get_picture_filename_list()
+        # try:
+        #     for path in filename_list:
+        #         uos.remove(path)
+        #     lcd.draw_string(lcd.width()//2-100, lcd.height()//2-4,
+        #                     "delete_image DONE", lcd.WHITE, lcd.RED)
+        #     time.sleep(1)
+
+        # except Exception as e:
+        #     print(e)
+        #     lcd.draw_string(lcd.width()//2-100, lcd.height()//2-4,
+        #                     "Error: delete_image", lcd.WHITE, lcd.RED)
+        #     time.sleep(1)
+
     time.sleep(1)
 
 
@@ -246,7 +279,7 @@ def long_press_a(mode, light_on_flag, drawing_picture_filename):
         # 次の動作予告として戻るのみを表示するために、進むの表示を削除
         lcd.draw_string(160, 115, '  ', lcd.WHITE, lcd.BLACK)
 
-        image_filenames = uos.listdir()
+        image_filenames = get_picture_filename_list()
         image_filenames = sort_listdir(image_filenames)
         index = image_filenames.index(drawing_picture_filename)
         index_inc = (index-1)
@@ -256,16 +289,22 @@ def long_press_a(mode, light_on_flag, drawing_picture_filename):
     return light_on_flag, drawing_picture_filename
 
 
-def short_press_a(mode, drawing_picture_filename):
+def short_press_a(mode, drawing_picture_filename, light_on_flag):
     print("short_press_a")
     if mode == "camera":
-        play_sound("/sd/sound/shutter.wav", 40)
+        if light_on_flag is True:
+            # ライト点灯状態だと音がならないようなので、一旦ライト消灯して音を鳴らす
+            light_on_flag = turn_off_light(light_on_flag)
+            play_sound("/sd/sound/shutter.wav", 40)
+            light_on_flag = turn_on_light(light_on_flag)
+        else:
+            play_sound("/sd/sound/shutter.wav", 40)
         save_image()
     else:  # mode == "photo"
         # 次の動作予告として進むのみを表示するために、戻るの表示を削除
         lcd.draw_string(70, 115, '  ', lcd.WHITE, lcd.BLACK)
 
-        image_filenames = uos.listdir()
+        image_filenames = get_picture_filename_list()
         image_filenames = sort_listdir(image_filenames)
         index = image_filenames.index(drawing_picture_filename)
         if (index + 1) < len(image_filenames):
@@ -308,6 +347,7 @@ while(True):
         if mode == "camera":
             mode = "photo"
             print("camera to photo")
+            light_on_flag = turn_off_light(light_on_flag)
             show_image('/sd/image/photo_mode.jpg')
             play_sound("/sd/sound/shashin.wav", 40)
             drawing_picture_filename = draw_picture(
@@ -339,7 +379,7 @@ while(True):
                 # short press
                 if count_a <= thresh_long_press_a:
                     drawing_picture_filename = short_press_a(
-                        mode, drawing_picture_filename)
+                        mode, drawing_picture_filename, light_on_flag)
                     break
 
                 else:
