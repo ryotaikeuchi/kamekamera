@@ -1,4 +1,7 @@
-こどもカメラ「カメカメラ」
+子どもカメラ「カメカメラ」
+子ども向けの小型カメラ。操作音とイラスト表示がかわいくて楽しい。カスタマイズして さらに楽しんで！
 
-https://protopedia.net/prototype/2699
+必要なものは、M5StickVとそれに対応したmicroSDカードのみ。
+セットアップは、ここにあるファイル一式をmicroSDカードにコピーするだけ。
 
+詳細：　https://protopedia.net/prototype/2699
